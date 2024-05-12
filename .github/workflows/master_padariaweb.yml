@@ -54,4 +54,4 @@ jobs:
           app-name: 'PadariaWeb'
           slot-name: 'Production'
           package: .
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_AB6AC3CE7DE04515A254608B4A6548D9 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_A0F96696FF8B477B9AA3008870948A9F }}
