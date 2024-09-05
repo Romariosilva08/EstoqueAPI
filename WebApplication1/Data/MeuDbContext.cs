@@ -11,24 +11,24 @@ namespace MinhaAPIEstoque.Data
         }
 
         public DbSet<Produtos> Produtos { get; set; } 
-        public DbSet<Usuarios> Usuarios { get; set; } 
+        public DbSet<Usuarios> Usuarios { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Configure as propriedades da classe Produtos para a tabela no banco de dados
             modelBuilder.Entity<Produtos>(entity =>
             {
-                entity.ToTable("Produtos"); // Define o nome da tabela
-                entity.HasKey(e => e.Id); // Define a chave primária
-                // Defina outras configurações de propriedade, como tamanho máximo, restrições, etc.
+                entity.ToTable("Produtos"); 
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Preco)
+                    .HasColumnType("decimal(18,2)"); 
             });
 
             // Configure as propriedades da classe Usuario para a tabela no banco de dados
             modelBuilder.Entity<Usuarios>(entity =>
             {
-                entity.ToTable("Usuarios"); // Define o nome da tabela
-                entity.HasKey(e => e.Id); // Define a chave primária
-                // Defina outras configurações de propriedade, como tamanho máximo, restrições, etc.
+                entity.ToTable("Usuarios");
+                entity.HasKey(e => e.Id); 
             });
 
             base.OnModelCreating(modelBuilder);

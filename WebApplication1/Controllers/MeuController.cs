@@ -17,8 +17,6 @@ namespace MinhaAPIEstoque.Controllers
         private readonly MeuDbContext _context;
         private readonly IConfiguration _configuration;
 
-
-        //public ProdutosController(MeuDbContext context)
         public ProdutosController(MeuDbContext context, IConfiguration configuration)
 
         {
@@ -162,9 +160,6 @@ namespace MinhaAPIEstoque.Controllers
         //}
 
 
-
-
-
     }
 
 
@@ -270,60 +265,33 @@ namespace MinhaAPIEstoque.Controllers
 
 
 
-        //implementando
-        //[HttpPost("api/usuarios/esqueci-senha")]
-        //public async Task<ActionResult<string>> EsqueciSenha([FromBody] EsqueciSenhaModel model)
-        //{
-        //    if (model == null || string.IsNullOrEmpty(model.Email))
-        //    {
-        //        return BadRequest("E-mail é obrigatório.");
-        //    }
+        [HttpPost("api/usuarios/esqueci-senha")]
+        public async Task<ActionResult> EsqueciSenha([FromBody] EsqueciSenhaModel model)
+        {
+            if (model == null || string.IsNullOrEmpty(model.Email))
+            {
+                return BadRequest("E-mail é obrigatório.");
+            }
 
-        //    var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email.Trim().ToLower() == model.Email.Trim().ToLower());
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email.Trim().ToLower() == model.Email.Trim().ToLower());
 
-        //    if (usuario == null)
-        //    {
-        //        return NotFound("Usuário não encontrado.");
-        //    }
+            if (usuario == null)
+            {
+                return NotFound("Usuário não encontrado.");
+            }
 
-        //    // Gerar um token simples (por exemplo, baseado no e-mail do usuário)
-        //    string resetToken = GenerateSimpleToken(usuario.Email);
+            // Gerar um token de redefinição de senha
+            string resetToken = Convert.ToBase64String(Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()));
 
-        //    // Armazenar o token no banco de dados
-        //    usuario.ResetToken = resetToken;
-        //    usuario.ResetTokenExpiry = DateTime.UtcNow.AddHours(1); // Definir expiração para 1 hora
-        //    await _context.SaveChangesAsync();
+            // Armazenar o token e a data de expiração no banco de dados
+            usuario.ResetToken = resetToken;
+            usuario.ResetTokenExpiry = DateTime.UtcNow.AddHours(1);
+            await _context.SaveChangesAsync();
 
-        //    // Retornar o token na resposta da solicitação
-        //    return Ok(new { ResetToken = resetToken });
-        //}
+            // EnviarEmailRedefinicaoSenha(usuario.Email, resetToken);
 
-        //[HttpPost("api/usuarios/resetar-senha")]
-        //public async Task<ActionResult<string>> ResetarSenha([FromBody] ResetarSenhaModel model)
-        //{
-        //    if (model == null || string.IsNullOrEmpty(model.Token) || string.IsNullOrEmpty(model.NovaSenha))
-        //    {
-        //        return BadRequest("Token e nova senha são obrigatórios.");
-        //    }
-
-        //    // Verificar se o token é válido e não expirou
-        //    var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.ResetToken == model.Token && u.ResetTokenExpiry >= DateTime.UtcNow);
-
-        //    if (usuario == null)
-        //    {
-        //        return NotFound("Token inválido ou expirado.");
-        //    }
-
-        //    // Hash a nova senha antes de salvar o usuário
-        //    var hashedPassword = BCrypt.Net.BCrypt.HashPassword(model.NovaSenha, BCrypt.Net.BCrypt.GenerateSalt());
-        //    usuario.Senha = hashedPassword;
-        //    usuario.ResetToken = null;
-        //    usuario.ResetTokenExpiry = null;
-
-        //    await _context.SaveChangesAsync();
-
-        //    return Ok("Senha redefinida com sucesso.");
-        //}
+            return Ok("Token de redefinição de senha enviado para o seu e-mail.");
+        }
 
 
         //private string GenerateSimpleToken(string userEmail)
