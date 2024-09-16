@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using MinhaAPIEstoque.Data;
 using MinhaAPIEstoque.Models;
 using MinhaAPIEstoque.Utils;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 
 
@@ -259,64 +259,141 @@ namespace MinhaAPIEstoque.Controllers
 
 
 
-
-
-
-
-
-
-        [HttpPost("api/usuarios/esqueci-senha")]
-        public async Task<ActionResult> EsqueciSenha([FromBody] EsqueciSenhaModel model)
-        {
-            if (model == null || string.IsNullOrEmpty(model.Email))
-            {
-                return BadRequest("E-mail é obrigatório.");
-            }
-
-            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email.Trim().ToLower() == model.Email.Trim().ToLower());
-
-            if (usuario == null)
-            {
-                return NotFound("Usuário não encontrado.");
-            }
-
-            // Gerar um token de redefinição de senha
-            string resetToken = Convert.ToBase64String(Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()));
-
-            // Armazenar o token e a data de expiração no banco de dados
-            usuario.ResetToken = resetToken;
-            usuario.ResetTokenExpiry = DateTime.UtcNow.AddHours(1);
-            await _context.SaveChangesAsync();
-
-            // EnviarEmailRedefinicaoSenha(usuario.Email, resetToken);
-
-            return Ok("Token de redefinição de senha enviado para o seu e-mail.");
-        }
-
-
-        //private string GenerateSimpleToken(string userEmail)
+        //[HttpPost("api/usuarios/esqueci-senha")]
+        //public async Task<ActionResult> EsqueciSenha([FromBody] EsqueciSenhaModel model)
         //{
-        //    // Gerar um token usando o e-mail do usuário
-        //    string token = Convert.ToBase64String(Encoding.UTF8.GetBytes(userEmail));
+        //    if (model == null || string.IsNullOrEmpty(model.Email))
+        //    {
+        //        return BadRequest("E-mail é obrigatório.");
+        //    }
 
-        //    // Retornar o token gerado
-        //    return token;
+        //    var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email.Trim().ToLower() == model.Email.Trim().ToLower());
+
+        //    if (usuario == null)
+        //    {
+        //        return NotFound("Usuário não encontrado.");
+        //    }
+
+        //    // Gerar um token de redefinição de senha
+        //    string resetToken = Convert.ToBase64String(Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()));
+
+        //    // Armazenar o token e a data de expiração no banco de dados
+        //    usuario.ResetToken = resetToken;
+        //    usuario.ResetTokenExpiry = DateTime.UtcNow.AddHours(1);
+        //    await _context.SaveChangesAsync();
+
+        //    // EnviarEmailRedefinicaoSenha(usuario.Email, resetToken);
+
+        //    return Ok("Token de redefinição de senha enviado para o seu e-mail.");
         //}
 
 
 
 
 
+        //[HttpPost("api/produtos/comprar/{id}")]
+        //public async Task<ActionResult> ComprarProduto(int id, [FromBody] DetalhesCompra detalhes)
+        //{
+        //    var produto = await _context.Produtos.FindAsync(id);
+
+        //    if (produto == null)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    // Verificar se há estoque suficiente
+        //    if (produto.Quantidade < detalhes.Quantidade)
+        //    {
+        //        return BadRequest("Estoque insuficiente.");
+        //    }
+
+        //    // Calcular o preço total com base na quantidade
+        //    var precoTotal = detalhes.Quantidade * produto.Preco.Value;
+
+        //    // Atualizar o estoque do produto
+        //    produto.Quantidade -= detalhes.Quantidade;
+
+        //    // Atualizar o preço total do produto
+        //    var totalProduto = precoTotal; // Ajuste aqui se necessário
+
+        //    await _context.SaveChangesAsync();
+
+        //    return Ok(new { Mensagem = "Compra realizada com sucesso!", Total = totalProduto });
+        //}
+
+        [HttpPost("api/produtos/comprar/{id}")]
+        public async Task<ActionResult> ComprarProduto(int id, [FromBody] DetalhesCompra detalhes)
+        {
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    var produto = await _context.Produtos.FindAsync(id);
+
+                    if (produto == null)
+                    {
+                        return NotFound("Produto não encontrado.");
+                    }
+
+                    if (produto.Quantidade < detalhes.Quantidade)
+                    {
+                        return Ok(new { Mensagem = "Estoque insuficiente. Gostaria de fazer uma encomenda?" });
+                    }
+
+                    //if (produto.Quantidade < detalhes.Quantidade)
+                    //{
+                    //    return BadRequest("Estoque insuficiente.");
+                    //}
+
+                    var precoTotal = detalhes.Quantidade * produto.Preco.Value;
+
+                    produto.Quantidade -= detalhes.Quantidade;
+
+                    var totalProduto = precoTotal;
+
+                    await _context.SaveChangesAsync();
+
+                    await transaction.CommitAsync();
+
+                    return Ok(new { Mensagem = "Compra realizada com sucesso!", Total = totalProduto });
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    return StatusCode(500, $"Ocorreu um erro ao processar a compra: {ex.Message}");
+                }
+            }
+        }
 
 
 
+        [HttpPost("api/produtos/verificar-estoque")]
+        public async Task<ActionResult> VerificarEstoque()
+        {
+            var produtosBaixoEstoque = await _context.Produtos.Where(p => p.Quantidade < 50).ToListAsync();
 
+            if (produtosBaixoEstoque.Count > 0)
+            {
+                await EnviarNotificacaoEstoque(produtosBaixoEstoque);
 
+                return Ok("Notificações enviadas para administradores sobre o estoque baixo.");
+            }
 
+            return Ok("Estoque dentro dos níveis aceitáveis.");
+        }
 
+        private async Task EnviarNotificacaoEstoque(List<Produtos> produtosBaixoEstoque)
+        {
+            var emailService = new EmailService(_configuration);
 
+            foreach (var produto in produtosBaixoEstoque)
+            {
+                string mensagem = $"Produto {produto.Nome} está com estoque baixo: {produto.Quantidade} unidades restantes.";
+                string destinatario = "unideliciasdotrigo@outlook.com";
 
-
+                await emailService.EnviarEmailAsync(destinatario, "Alerta: Produto com estoque baixo", mensagem);
+            }
+        }
 
 
 

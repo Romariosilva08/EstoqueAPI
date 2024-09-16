@@ -42,10 +42,7 @@ namespace MinhaAPIEstoque
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "padaria_project", Version = "v1" });
             });
 
-            // Configuração da autenticação JWT
-            //var key = Encoding.ASCII.GetBytes(GenerateRandomKey());
-
-
+      
             // Configuração da autenticação JWT
             var jwtSettings = Configuration.GetSection("Jwt").Get<JwtSettings>();
             var key = Encoding.ASCII.GetBytes(jwtSettings.Secret);
@@ -63,13 +60,7 @@ namespace MinhaAPIEstoque
                     };
                 });
 
-
-            // Configuração do HttpClient
-            //services.AddHttpClient<ApiService>();
-
-            // Configuração para usar a codificação UTF-8 no pipeline de solicitação HTTP
-            //services.AddMvc().AddMvcOptions(options => options.OutputFormatters.Add(new Utf8JsonOutputFormatter()));
-
+           
             // Configuração do CORS
             services.AddCors(options =>
             {
