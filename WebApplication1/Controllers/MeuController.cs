@@ -253,73 +253,7 @@ namespace MinhaAPIEstoque.Controllers
 
             return Ok(new { Token = token, Nome = usuario.Nome });
 
-            //return Ok(new LoginResponse { Token = token });
         }
-
-
-
-
-        //[HttpPost("api/usuarios/esqueci-senha")]
-        //public async Task<ActionResult> EsqueciSenha([FromBody] EsqueciSenhaModel model)
-        //{
-        //    if (model == null || string.IsNullOrEmpty(model.Email))
-        //    {
-        //        return BadRequest("E-mail é obrigatório.");
-        //    }
-
-        //    var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email.Trim().ToLower() == model.Email.Trim().ToLower());
-
-        //    if (usuario == null)
-        //    {
-        //        return NotFound("Usuário não encontrado.");
-        //    }
-
-        //    // Gerar um token de redefinição de senha
-        //    string resetToken = Convert.ToBase64String(Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()));
-
-        //    // Armazenar o token e a data de expiração no banco de dados
-        //    usuario.ResetToken = resetToken;
-        //    usuario.ResetTokenExpiry = DateTime.UtcNow.AddHours(1);
-        //    await _context.SaveChangesAsync();
-
-        //    // EnviarEmailRedefinicaoSenha(usuario.Email, resetToken);
-
-        //    return Ok("Token de redefinição de senha enviado para o seu e-mail.");
-        //}
-
-
-
-
-
-        //[HttpPost("api/produtos/comprar/{id}")]
-        //public async Task<ActionResult> ComprarProduto(int id, [FromBody] DetalhesCompra detalhes)
-        //{
-        //    var produto = await _context.Produtos.FindAsync(id);
-
-        //    if (produto == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    // Verificar se há estoque suficiente
-        //    if (produto.Quantidade < detalhes.Quantidade)
-        //    {
-        //        return BadRequest("Estoque insuficiente.");
-        //    }
-
-        //    // Calcular o preço total com base na quantidade
-        //    var precoTotal = detalhes.Quantidade * produto.Preco.Value;
-
-        //    // Atualizar o estoque do produto
-        //    produto.Quantidade -= detalhes.Quantidade;
-
-        //    // Atualizar o preço total do produto
-        //    var totalProduto = precoTotal; // Ajuste aqui se necessário
-
-        //    await _context.SaveChangesAsync();
-
-        //    return Ok(new { Mensagem = "Compra realizada com sucesso!", Total = totalProduto });
-        //}
 
         [HttpPost("api/produtos/comprar/{id}")]
         public async Task<ActionResult> ComprarProduto(int id, [FromBody] DetalhesCompra detalhes)

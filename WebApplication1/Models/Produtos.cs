@@ -8,7 +8,6 @@ public class Produtos
     public DateTime? DataProducao { get; set; }
     public decimal? Preco { get; set; }
     public int? Quantidade { get; set; }
-    //public decimal Total { get; set; } 
 
     public string Status
     {
@@ -40,8 +39,6 @@ public class Usuarios
     public string Email { get; set; }
 
     public string Senha { get; set; }
-
-
 
 }
 

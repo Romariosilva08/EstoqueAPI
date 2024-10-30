@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MinhaAPIEstoque.Data;
-using MinhaAPIEstoque.Services;
 using padaria_project.Extensions;
 using System.Text;
 
@@ -19,31 +18,22 @@ namespace MinhaAPIEstoque
 
         public IConfiguration Configuration { get; }
 
-        // Este método é usado para adicionar serviços ao contêiner.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<IConfiguration>(Configuration); // Adicione esta linha para registrar a IConfiguration
+            services.AddSingleton<IConfiguration>(Configuration); 
            
-            // Configuração do banco de dados SQLite
             services.AddDbContext<MeuDbContext>(options =>
                 options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
 
-            services.AddScoped<ProdutoService>();
-            services.AddScoped<ApiService>();
-
-            // Configuração do HttpClient
-            services.AddHttpClient<ApiService>();
 
             services.AddSwaggerConfiguration();
 
-            // Configuração do Swagger
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "padaria_project", Version = "v1" });
             });
 
       
-            // Configuração da autenticação JWT
             var jwtSettings = Configuration.GetSection("Jwt").Get<JwtSettings>();
             var key = Encoding.ASCII.GetBytes(jwtSettings.Secret);
 
@@ -61,7 +51,6 @@ namespace MinhaAPIEstoque
                 });
 
            
-            // Configuração do CORS
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowAny",
@@ -73,18 +62,15 @@ namespace MinhaAPIEstoque
                     });
             });
 
-            // Configuração das páginas Razor
             services.AddRazorPages();
         }
 
-        // Configuração da autenticação JWT
         public class JwtSettings
         {
             public string Secret { get; set; }
         }
 
 
-        // Este método é usado para configurar o pipeline de solicitação HTTP.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
@@ -116,10 +102,8 @@ namespace MinhaAPIEstoque
 
             app.UseRouting();
 
-            // Aplicando autenticação JWT
             app.UseAuthentication();
 
-            // Middleware para habilitar o CORS
             app.UseCors("AllowAny");
 
             app.UseAuthorization();
